@@ -1,3 +1,7 @@
+"""
+bayesian network for the earthquake/alarm problem.
+"""
+
 from pgmpy.models import BayesianNetwork
 from pgmpy.inference import VariableElimination
 
@@ -52,9 +56,32 @@ alarm_model.add_cpds(
 
 alarm_infer = VariableElimination(alarm_model)
 
-#print(alarm_infer.query(variables=["JohnCalls"],evidence={"Earthquake":"yes"}))
-#
-#the probability of Mary Calling given that John called
+def main():
+    print("=" * 60)
+    print("ALARM NETWORK QUERIES")
+    print("=" * 60)
+    
+    # p(johncalls | earthquake)
+    print("\n1. P(JohnCalls | Earthquake = yes):")
+    q1 = alarm_infer.query(variables=["JohnCalls"], evidence={"Earthquake": "yes"})
+    print(q1)
+    
+    # p(marycalls | johncalls)
+    print("\n2. P(MaryCalls | JohnCalls = yes):")
+    q2 = alarm_infer.query(variables=["MaryCalls"], evidence={"JohnCalls": "yes"})
+    print(q2)
+    
+    # p(johncalls, marycalls | alarm)
+    print("\n3. P(JohnCalls, MaryCalls | Alarm = yes):")
+    q3 = alarm_infer.query(variables=["JohnCalls", "MaryCalls"], evidence={"Alarm": "yes"})
+    print(q3)
+    
+    # p(alarm | marycalls)
+    print("\n4. P(Alarm | MaryCalls = yes):")
+    q4 = alarm_infer.query(variables=["Alarm"], evidence={"MaryCalls": "yes"})
+    print(q4)
+    
+    print("\n" + "=" * 60)
 
-q = alarm_infer.query(variables=["Alarm", "Burglary"],evidence={"MaryCalls":"yes"})
-print(q)
+if __name__ == "__main__":
+    main()

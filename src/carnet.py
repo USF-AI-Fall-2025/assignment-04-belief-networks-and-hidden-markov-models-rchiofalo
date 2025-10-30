@@ -1,3 +1,7 @@
+"""
+bayesian network for the car starting problem.
+"""
+
 from pgmpy.models import BayesianNetwork
 from pgmpy.inference import VariableElimination
 from pgmpy.factors.discrete import TabularCPD
@@ -45,7 +49,7 @@ cpd_ignition = TabularCPD(
 cpd_starts = TabularCPD(
     variable="Starts",
     variable_card=2,
-    values=[[0.95, 0.05, 0.05, 0.001], [0.05, 0.95, 0.95, 0.9999]],
+    values=[[0.95, 0.05, 0.05, 0.001], [0.05, 0.95, 0.95, 0.999]],
     evidence=["Ignition", "Gas"],
     evidence_card=[2, 2],
     state_names={"Starts":['yes','no'], "Ignition":["Works", "Doesn't work"], "Gas":['Full',"Empty"]},
@@ -66,6 +70,46 @@ car_model.add_cpds( cpd_starts, cpd_ignition, cpd_gas, cpd_radio, cpd_battery, c
 
 car_infer = VariableElimination(car_model)
 
-print(car_infer.query(variables=["Moves"],evidence={"Radio":"turns on", "Starts":"yes"}))
+def main():
+    print("=" * 60)
+    print("CAR NETWORK QUERIES")
+    print("=" * 60)
+    
+    # p(battery | moves=no)
+    print("\n1. P(Battery = Doesn't work | Moves = no):")
+    q1 = car_infer.query(variables=["Battery"], evidence={"Moves": "no"})
+    print(q1)
+    
+    # p(starts | radio broken)
+    print("\n2. P(Starts = no | Radio = Doesn't turn on):")
+    q2 = car_infer.query(variables=["Starts"], evidence={"Radio": "Doesn't turn on"})
+    print(q2)
+    
+    # independence test: does p(radio | battery) change with gas?
+    print("\n3. P(Radio | Battery = Works):")
+    q3a = car_infer.query(variables=["Radio"], evidence={"Battery": "Works"})
+    print(q3a)
+    
+    print("\n   P(Radio | Battery = Works, Gas = Full):")
+    q3b = car_infer.query(variables=["Radio"], evidence={"Battery": "Works", "Gas": "Full"})
+    print(q3b)
+    
+    # explaining away: how does gas observation affect ignition probability?
+    print("\n4. P(Ignition | Moves = no):")
+    q4a = car_infer.query(variables=["Ignition"], evidence={"Moves": "no"})
+    print(q4a)
+    
+    print("\n   P(Ignition | Moves = no, Gas = Empty):")
+    q4b = car_infer.query(variables=["Ignition"], evidence={"Moves": "no", "Gas": "Empty"})
+    print(q4b)
+    
+    # p(starts | radio works, has gas)
+    print("\n5. P(Starts | Radio = turns on, Gas = Full):")
+    q5 = car_infer.query(variables=["Starts"], evidence={"Radio": "turns on", "Gas": "Full"})
+    print(q5)
+    
+    print("\n" + "=" * 60)
 
+if __name__ == "__main__":
+    main()
 
